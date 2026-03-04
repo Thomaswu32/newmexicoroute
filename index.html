@@ -3,170 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>西南大满贯 8天 终极环线</title>
+    <title>newmexicoroute - 西南大满贯</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root {
-            --primary-color: #c0392b; 
-            --bg-color: #e9ecef;
-            --text-color: #333;
-        }
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; /* 防止全身滚动干扰 */
-        }
-        
-        /* 强制左右布局容器 */
-        #main-wrapper {
-            width: 90vw;
-            height: 85vh;
-            min-width: 800px; /* 保证 PC 端不缩成一团 */
-            display: flex;
-            background-color: #fff;
-            border-radius: 16px;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* 左侧地图 */
-        #map-container {
-            width: 50%;
-            height: 100%;
-            border-right: 2px solid #eee;
-            position: relative;
-            z-index: 1;
-        }
+        :root { --primary-color: #c0392b; --bg-color: #e9ecef; --text-color: #333; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #main-wrapper { width: 90vw; height: 85vh; min-width: 800px; display: flex; background-color: #fff; border-radius: 16px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); overflow: hidden; position: relative; }
+        #map-container { width: 50%; height: 100%; border-right: 2px solid #eee; position: relative; z-index: 1; }
         #map { width: 100%; height: 100%; }
-
-        /* 右侧行程 - 增加 z-index 确保点击优先 */
-        #itinerary-container {
-            width: 50%;
-            height: 100%;
-            overflow-y: scroll; /* 强制显示滚动条逻辑 */
-            padding: 30px;
-            box-sizing: border-box;
-            background-color: #faf9f6;
-            position: relative;
-            z-index: 10; 
-            -webkit-overflow-scrolling: touch; /* 优化 iOS 滚动顺滑度 */
-        }
-
+        #itinerary-container { width: 50%; height: 100%; overflow-y: scroll; padding: 30px; box-sizing: border-box; background-color: #faf9f6; position: relative; z-index: 10; -webkit-overflow-scrolling: touch; }
         h1 { color: var(--primary-color); font-size: 22px; margin: 0 0 10px 0; border-bottom: 3px solid var(--primary-color); padding-bottom: 5px; display: inline-block; }
         .intro { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
-        
-        .day-card { 
-            background: #fff; 
-            border-left: 4px solid var(--primary-color); 
-            border-radius: 0 8px 8px 0; 
-            padding: 15px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
+        .day-card { background: #fff; border-left: 4px solid var(--primary-color); border-radius: 0 8px 8px 0; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .day-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .drive-time { font-size: 11px; color: #c0392b; background: #fadbd8; padding: 3px 8px; border-radius: 12px; }
+        .drive-time { font-size: 11px; color: #fff; background: var(--primary-color); padding: 3px 8px; border-radius: 12px; }
         .highlights { font-size: 13px; line-height: 1.6; color: #555; }
-
-        /* 重点优化的按钮点击区域 */
         .spot-tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; }
-        .spot-tag { 
-            display: inline-block; 
-            background: #ecf0f1; 
-            color: #34495e; 
-            padding: 8px 15px; /* 增加点击跨度 */
-            border-radius: 6px; 
-            font-size: 12px; 
-            font-weight: 600; 
-            text-decoration: none; 
-            border: 1px solid transparent;
-            cursor: pointer;
-            position: relative;
-            z-index: 20; /* 确保在最上层 */
-            touch-action: manipulation; /* 优化移动端点击延迟 */
-        }
-        .spot-tag:active { background: #dcdde1; } /* 点击时的反馈 */
+        .spot-tag { display: inline-block; background: #ecf0f1; color: #34495e; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; position: relative; z-index: 20; touch-action: manipulation; }
         .spot-tag:hover { background: var(--primary-color); color: #fff; }
-
-        /* 针对超小屏幕（手机竖屏强制显示左右）的微调 */
-        @media screen and (max-width: 768px) {
-            #main-wrapper { width: 100vw; height: 100vh; min-width: 0; }
-            h1 { font-size: 18px; }
-            .day-card { padding: 10px; }
-        }
     </style>
 </head>
 <body>
-
     <div id="main-wrapper">
         <div id="map-container"><div id="map"></div></div>
-
         <div id="itinerary-container">
-            <h1>👑 8天 西南大满贯环线</h1>
-            <p class="intro">点击标签跳转小红书搜索。已锁定左右分栏。</p>
+            <h1>👑 8天 西南大满贯 (newmexicoroute)</h1>
+            <p class="intro">点击标签跳转小红书。Day 2 调整为长途奔袭模式，争取大沙丘日落。</p>
 
             <div class="day-card">
                 <div class="day-title">Day 1: 牛仔起步 <span class="drive-time">🚗 6h</span></div>
-                <div class="highlights">达拉斯 ➔ 沃斯堡 ➔ 阿马里洛。</div>
+                <div class="highlights">达拉斯 ➔ 沃斯堡 ➔ 阿马里洛。傍晚去打卡经典的凯迪拉克庄园。</div>
                 <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Fort+Worth+Stockyards" target="_blank" class="spot-tag">牛仔小镇</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Fort+Worth+牛仔小镇" target="_blank" class="spot-tag">牛仔小镇</a>
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Cadillac+Ranch" target="_blank" class="spot-tag">凯迪拉克庄园</a>
                 </div>
             </div>
 
             <div class="day-card">
-                <div class="day-title">Day 2: 历史画卷 <span class="drive-time">🚗 4.5h</span></div>
-                <div class="highlights">阿马里洛 ➔ 圣达菲。</div>
+                <div class="day-title">Day 2: 极致跨越 <span class="drive-time">🚗 6.5h</span></div>
+                <div class="highlights">阿马里洛 ➔ 圣达菲 (快闪午餐) ➔ 大沙丘 (日落时分抵达)。</div>
                 <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Santa+Fe+Adobe" target="_blank" class="spot-tag">圣达菲老城</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Santa+Fe+Old+Town" target="_blank" class="spot-tag">圣达菲老城</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Great+Sand+Dunes+日落" target="_blank" class="spot-tag">大沙丘日落</a>
                 </div>
             </div>
 
             <div class="day-card">
-                <div class="day-title">Day 3: 雪山沙丘 <span class="drive-time">🚗 3.5h</span></div>
-                <div class="highlights">圣达菲 ➔ 陶斯 ➔ 大沙丘。</div>
+                <div class="day-title">Day 3: 沙丘与印第安村 <span class="drive-time">🚗 3h</span></div>
+                <div class="highlights">清晨玩大沙丘 ➔ 陶斯 (Taos) ➔ 下午前往科州南部住下。</div>
                 <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Great+Sand+Dunes" target="_blank" class="spot-tag">大沙丘公园</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Taos+Pueblo+印第安村" target="_blank" class="spot-tag">陶斯印第安村</a>
                 </div>
             </div>
 
             <div class="day-card">
                 <div class="day-title">Day 4: 悬崖与孤峰 <span class="drive-time">🚗 6h</span></div>
-                <div class="highlights">大沙丘 ➔ 梅萨维德 ➔ 船岩。</div>
+                <div class="highlights">梅萨维德 (Mesa Verde) ➔ 船岩 (Shiprock) ➔ 法明顿。</div>
                 <div class="spot-tags">
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Mesa+Verde" target="_blank" class="spot-tag">悬崖宫殿</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Shiprock+New+Mexico" target="_blank" class="spot-tag">船岩孤峰</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Shiprock+船岩" target="_blank" class="spot-tag">船岩孤峰</a>
                 </div>
             </div>
 
             <div class="day-card">
                 <div class="day-title">Day 5: 异星荒原 <span class="drive-time">🚗 4h</span></div>
-                <div class="highlights">法明顿 ➔ 梦幻谷 ➔ ABQ。</div>
+                <div class="highlights">法明顿 ➔ 梦幻谷 (Valley of Dreams) ➔ 阿尔伯克基 (ABQ)。</div>
                 <div class="spot-tags">
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Valley+of+Dreams+Bisti" target="_blank" class="spot-tag">梦幻谷</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Albuquerque+Breaking+Bad" target="_blank" class="spot-tag">ABQ 毒师</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Albuquerque+Breaking+Bad" target="_blank" class="spot-tag">ABQ 毒师打卡</a>
                 </div>
             </div>
 
             <div class="day-card">
                 <div class="day-title">Day 6: 纯白梦境 <span class="drive-time">🚗 3.5h</span></div>
-                <div class="highlights">阿尔伯克基 ➔ 白沙。</div>
+                <div class="highlights">ABQ ➔ 白沙国家公园 (White Sands)。</div>
                 <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=White+Sands+National+Park" target="_blank" class="spot-tag">白沙公园</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=White+Sands+白沙公园" target="_blank" class="spot-tag">白沙日落</a>
                 </div>
             </div>
 
             <div class="day-card">
                 <div class="day-title">Day 7: 地心探险 <span class="drive-time">🚗 4.5h</span></div>
-                <div class="highlights">白沙 ➔ 洞穴 ➔ 罗斯威尔。</div>
+                <div class="highlights">白沙 ➔ 卡尔斯巴德洞穴 ➔ 罗斯威尔 (Roswell)。</div>
                 <div class="spot-tags">
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Carlsbad+Caverns" target="_blank" class="spot-tag">溶洞探秘</a>
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Roswell+UFO" target="_blank" class="spot-tag">外星人小镇</a>
@@ -175,14 +93,14 @@
 
             <div class="day-card">
                 <div class="day-title">Day 8: 归途 <span class="drive-time">🚗 6.5h</span></div>
-                <div class="highlights">罗斯威尔 ➔ 达拉斯。</div>
+                <div class="highlights">罗斯威尔 ➔ 穿越德州 ➔ 返回达拉斯。</div>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map', { tap: false }).setView([34.8, -104.5], 5); // 禁用 Leaflet 默认 tap 处理
+        var map = L.map('map', { tap: false }).setView([35.0, -103.0], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
         
         var locations = [
@@ -190,8 +108,8 @@
             { name: "Fort Worth", lat: 32.7887, lon: -97.3498 },
             { name: "Amarillo", lat: 35.2220, lon: -101.8313 },
             { name: "Santa Fe", lat: 35.6870, lon: -105.9378 },
-            { name: "Taos", lat: 36.4072, lon: -105.5730 },
             { name: "Great Sand Dunes", lat: 37.7329, lon: -105.5121 },
+            { name: "Taos", lat: 36.4072, lon: -105.5730 },
             { name: "Mesa Verde", lat: 37.2309, lon: -108.4618 },
             { name: "Shiprock", lat: 36.6859, lon: -108.8364 },
             { name: "Valley of Dreams", lat: 36.1466, lon: -107.9808 },
@@ -203,11 +121,10 @@
         ];
 
         var latlngs = locations.map(l => [l.lat, l.lon]);
-        locations.forEach(l => L.marker([l.lat, l.lon]).addTo(map));
+        locations.forEach(l => L.marker([l.lat, l.lon]).addTo(map).bindPopup(l.name));
         L.polyline(latlngs, {color: '#c0392b', weight: 4, dashArray: '8, 8'}).addTo(map);
         
-        // 自动调整视野
-        setTimeout(() => { map.fitBounds(latlngs, {padding: [20, 20]}); }, 200);
+        setTimeout(() => { map.fitBounds(latlngs, {padding: [25, 25]}); }, 300);
     </script>
 </body>
 </html>
