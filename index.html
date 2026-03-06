@@ -150,6 +150,56 @@
         locations.forEach(l => L.marker([l.lat, l.lon]).addTo(map).bindPopup(l.name));
         L.polyline(latlngs, {color: '#c0392b', weight: 4, dashArray: '8, 8'}).addTo(map);
         
+        // Hotel addresses
+        var hotelAddresses = [
+            "820 Thousand Oaks Drive, Hurst, Texas 76054 United States",
+            "724 S Polk St, Amarillo, Texas 79101",
+            "721 Mariposa St, Alamosa, Colorado 81101",
+            "21691 US Highway 160 West, Durango, Colorado 81301 USA"
+        ];
+
+        // Fallback coordinates if geocoding fails
+        var hotelFallbacks = [
+            null, // Day 1
+            null, // Day 2
+            null, // Day 3
+            [37.2769, -107.8766] // Day 4 Durango, CO
+        ];
+
+        // Function to geocode address
+        async function geocode(address) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const data = await response.json();
+                if (data.length > 0) {
+                    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                }
+            } catch (error) {
+                console.error('Geocoding error:', error);
+            }
+            return null;
+        }
+
+        // Add hotel markers
+        hotelAddresses.forEach(async (address, index) => {
+            let coords = await geocode(address);
+            if (!coords && hotelFallbacks[index]) {
+                coords = hotelFallbacks[index];
+            }
+            if (coords) {
+                L.marker(coords, {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map).bindPopup(`Hotel Day ${index + 1}: ${address}`);
+            }
+        });
+        
         setTimeout(() => { map.fitBounds(latlngs, {padding: [25, 25]}); }, 300);
     </script>
 </body>
