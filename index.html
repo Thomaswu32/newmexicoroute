@@ -218,6 +218,18 @@
         #toaster.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         #toaster.success { background: #27ae60; }
         #toaster.error   { background: #e74c3c; }
+
+        /* ── Car animation ── */
+        .car-div-icon { background: none !important; border: none !important; }
+        .car-emoji {
+            font-size: 28px; display: block; line-height: 1;
+            transition: transform 0.25s ease;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.35));
+            transform-origin: center center;
+        }
+        .day-card { cursor: pointer; transition: box-shadow .2s; }
+        .day-card:hover:not(.editing) { box-shadow: 0 4px 18px rgba(192,57,43,.18); }
+        .day-card.active-day { box-shadow: 0 0 0 2.5px var(--primary), 0 4px 18px rgba(192,57,43,.22) !important; }
     </style>
 </head>
 <body>
@@ -468,6 +480,92 @@
             }
         }
 
+        /* ─── Car marker & animation ────────────────────────────────────────── */
+        const carIcon = L.divIcon({
+            html: '<span class="car-emoji">🚗</span>',
+            className: 'car-div-icon',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+        });
+        let carPos = [32.8534, -97.1888]; // start at Day 1 hotel (Hurst TX)
+        const carMarker = L.marker(carPos, { icon: carIcon, zIndexOffset: 2000 }).addTo(map);
+        carMarker.bindPopup('');
+        let carAnimFrame = null;
+        let carAngle = 0;
+
+        function calcBearing(from, to) {
+            const r = d => d * Math.PI / 180;
+            const dLon = r(to[1] - from[1]);
+            const y = Math.sin(dLon) * Math.cos(r(to[0]));
+            const x = Math.cos(r(from[0])) * Math.sin(r(to[0])) - Math.sin(r(from[0])) * Math.cos(r(to[0])) * Math.cos(dLon);
+            return Math.atan2(y, x) * 180 / Math.PI;
+        }
+
+        function animateCar(target, dayIndex) {
+            if (carAnimFrame) cancelAnimationFrame(carAnimFrame);
+
+            const from = [...carPos];
+            const to   = target;
+
+            // Distance-proportional duration (600ms–2200ms)
+            const dist = Math.sqrt((to[0]-from[0])**2 + (to[1]-from[1])**2);
+            const duration = Math.min(2200, Math.max(600, dist * 280 + 400));
+
+            // Rotate car to face direction of travel
+            carAngle = calcBearing(from, to) - 90;
+            const carEl = carMarker.getElement();
+            if (carEl) {
+                const emoji = carEl.querySelector('.car-emoji');
+                if (emoji) emoji.style.transform = `rotate(${carAngle}deg)`;
+            }
+
+            // Fly map to destination
+            map.flyTo(to, 7, { duration: duration / 1000 });
+
+            const startTime = performance.now();
+            function frame(now) {
+                const t    = Math.min((now - startTime) / duration, 1);
+                const ease = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+                carMarker.setLatLng([
+                    from[0] + (to[0] - from[0]) * ease,
+                    from[1] + (to[1] - from[1]) * ease
+                ]);
+                if (t < 1) {
+                    carAnimFrame = requestAnimationFrame(frame);
+                } else {
+                    carPos = [...to];
+                    // Bounce on arrival
+                    const el = carMarker.getElement()?.querySelector('.car-emoji');
+                    if (el) {
+                        el.style.transform = `rotate(${carAngle}deg) scale(1.4)`;
+                        setTimeout(() => { el.style.transform = `rotate(${carAngle}deg) scale(1)`; }, 280);
+                    }
+                    // Show popup with hotel name
+                    const days = toArr(currentData?.days || []);
+                    const day  = days[dayIndex];
+                    if (day?.hotel?.name) {
+                        carMarker.getPopup().setContent(`🏨 Day ${dayIndex + 1}: ${day.hotel.name}`);
+                        carMarker.openPopup();
+                    }
+                }
+            }
+            carAnimFrame = requestAnimationFrame(frame);
+        }
+
+        // Click a day card → drive car to that hotel
+        document.getElementById('itinerary-content').addEventListener('click', e => {
+            if (isEditing) return;
+            if (e.target.closest('a')) return; // don't intercept external links
+            const card = e.target.closest('.day-card[data-day]');
+            if (!card) return;
+            const i = parseInt(card.dataset.day);
+            const coords = hotelFallbacks[i];
+            if (!coords) return;
+            document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active-day'));
+            card.classList.add('active-day');
+            animateCar(coords, i);
+        });
+
         /* ─── Helpers ───────────────────────────────────────────────────────── */
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -517,7 +615,7 @@
 
             days.forEach((day, i) => {
                 const spots = toArr(day.spots);
-                html += `<div class="day-card">`;
+                html += `<div class="day-card" data-day="${i}">`;
                 html += `<div class="day-title">${esc(day.title)}<span class="drive-time">${esc(day.driveTime)}</span></div>`;
                 toHighlights(day.highlights).forEach(h => {
                     if (h) html += `<div class="highlight-block">${esc(h)}</div>`;
