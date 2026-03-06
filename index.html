@@ -25,6 +25,9 @@
         .hotel-icon { width: 36px; height: 36px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; flex-shrink: 0; }
         .hotel-details { flex: 1; }
         .hotel-name { font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 3px; }
+        .hotel-name a { color: #c0392b; text-decoration: none; cursor: pointer; }
+        .hotel-name a:hover { text-decoration: underline; }
+        .hotel-info { cursor: pointer; }
         .hotel-address { font-size: 11px; color: #7f8c8d; line-height: 1.4; }
     </style>
 </head>
@@ -41,7 +44,7 @@
                 <div class="hotel-info">
                     <div class="hotel-icon">🏨</div>
                     <div class="hotel-details">
-                        <div class="hotel-name">Holiday Inn Express & Suites DFW West - Hurst</div>
+                        <div class="hotel-name"><a href="https://www.ihg.com/holidayinnexpress/hotels/us/en/hurst/dfwht/hoteldetail" target="_blank">Holiday Inn Express & Suites DFW West - Hurst</a></div>
                         <div class="hotel-address">820 Thousand Oaks Drive, Hurst, Texas 76054 United States</div>
                     </div>
                 </div>
@@ -57,7 +60,7 @@
                 <div class="hotel-info">
                     <div class="hotel-icon">🏨</div>
                     <div class="hotel-details">
-                        <div class="hotel-name">Courtyard Amarillo Downtown</div>
+                        <div class="hotel-name"><a href="https://www.marriott.com/hotels/travel/amacd-courtyard-amarillo-downtown/" target="_blank">Courtyard Amarillo Downtown</a></div>
                         <div class="hotel-address">724 S Polk St, Amarillo, Texas 79101</div>
                     </div>
                 </div>
@@ -66,60 +69,90 @@
             <div class="day-card">
                 <div class="day-title">Day 3 (3.30): 极致穿越 <span class="drive-time">🚗 6.5h</span></div>
                 <div class="highlights">阿马里洛——Santa Fe——Taos。</div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name">Fairfield Inn & Suites Alamosa</div>
-                        <div class="hotel-address">721 Mariposa St, Alamosa, Colorado 81101</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 4 (4.1): 沙丘与印第安村 <span class="drive-time">🚗 4h</span></div>
-                <div class="highlights">大沙丘 然后前往mesa verde 住在mesa verde附近。</div>
                 <div class="spot-tags">
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Taos+Pueblo+印第安村" target="_blank" class="spot-tag">陶斯印第安村</a>
                 </div>
                 <div class="hotel-info">
                     <div class="hotel-icon">🏨</div>
                     <div class="hotel-details">
-                        <div class="hotel-name">Residence Inn by Marriott Durango Downtown</div>
+                        <div class="hotel-name"><a href="https://www.marriott.com/hotels/travel/alsfi-fairfield-inn-and-suites-alamosa/" target="_blank">Fairfield Inn & Suites Alamosa</a></div>
+                        <div class="hotel-address">721 Mariposa St, Alamosa, Colorado 81101</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-title">Day 4 (3.31): 沙丘与印第安村 <span class="drive-time">🚗 4h</span></div>
+                <div class="highlights">大沙丘 然后前往mesa verde 住在mesa verde附近。</div>
+                <div class="hotel-info">
+                    <div class="hotel-icon">🏨</div>
+                    <div class="hotel-details">
+                        <div class="hotel-name"><a href="https://www.marriott.com/search/findHotels.mi?fromToDate=03/05/2026&fromToDate_submit=04/02/2026&fromDate=04/01/2026&toDate=04/02/2026&toDateDefaultFormat=04/02/2026&fromDateDefaultFormat=04/01/2026&flexibleDateSearch=false&t-start=04/01/2026&t-end=04/02/2026&lengthOfStay=1&childrenCountBox=0+Children+Per+Room&childrenCount=0&clusterCode=none&useRewardsPoints=false&isAdvanceSearch=true&recordsPerPage=20&isInternalSearch=true&vsInitialRequest=false&searchType=InCity&singleSearchAutoSuggest=Unmatched&destinationAddress.placeId=ChIJI6BnjpsCPIcRodRaP-EDEx4&for-hotels-nearme=Near&collapseAccordian=is-hidden&singleSearch=true&isTransient=true&initialRequest=false&flexibleDateSearchRateDisplay=false&isSearch=true&isRateCalendar=false&destinationAddress.destination=Residence+Inn+by+Marriott+Durango+Downtown&isHideFlexibleDateCalendar=false&roomCountBox=1+Room&roomCount=1&guestCountBox=1+Adult+Per+Room&numAdultsPerRoom=1&deviceType=desktop-web&view=list" target="_blank">Residence Inn by Marriott Durango Downtown</a></div>
                         <div class="hotel-address">21691 US Highway 160 West, Durango, Colorado 81301 USA</div>
                     </div>
                 </div>
             </div>
 
             <div class="day-card">
-                <div class="day-title">Day 5 (4.2): 悬崖与孤峰 <span class="drive-time">🚗 6h</span></div>
+                <div class="day-title">Day 5 (4.1): 悬崖与孤峰 <span class="drive-time">🚗 6h</span></div>
                 <div class="highlights">梅萨维德 (Mesa Verde) ➔ 船岩 (Shiprock) ➔ 法明顿，法明顿 ➔ 梦幻谷 (Valley of Dreams)浅玩。</div>
                 <div class="spot-tags">
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Mesa+Verde" target="_blank" class="spot-tag">悬崖宫殿</a>
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Shiprock+船岩" target="_blank" class="spot-tag">船岩孤峰</a>
                     <a href="https://www.xiaohongshu.com/search_result?keyword=Valley+of+Dreams+Bisti" target="_blank" class="spot-tag">梦幻谷</a>
                 </div>
+                <div class="hotel-info">
+                    <div class="hotel-icon">🏨</div>
+                    <div class="hotel-details">
+                        <div class="hotel-name"><a href="https://www.marriott.com/hotels/travel/fmncv-courtyard-farmington/" target="_blank">Courtyard by Marriott Farmington</a></div>
+                        <div class="hotel-address">560 Scott Avenue, Farmington, New Mexico 87401 USA</div>
+                    </div>
+                </div>
             </div>
 
             <div class="day-card">
-                <div class="day-title">Day 6 (4.3): 白沙 到 卡尔斯巴德洞 <span class="drive-time">🚗 3.5h</span></div>
-                <div class="highlights">阿尔伯克基 (ABQ) ➔ 白沙国家公园 (White Sands) ➔ 卡尔斯巴德洞穴。</div>
+                <div class="day-title">Day 6 (4.2): 法明顿 ➔ ABQ ➔ 白沙 ➔ El Paso <span class="drive-time">🚗 6h</span></div>
+                <div class="highlights">从法明顿出发，经阿尔伯克基，游览白沙国家公园，傍晚抵达 El Paso 入住。</div>
                 <div class="spot-tags">
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Albuquerque+阿尔伯克基" target="_blank" class="spot-tag">ABQ</a>
                     <a href="https://www.xiaohongshu.com/search_result?keyword=White+Sands+白沙公园" target="_blank" class="spot-tag">白沙日落</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Carlsbad+Caverns" target="_blank" class="spot-tag">溶洞探秘</a>
+                </div>
+                <div class="hotel-info">
+                    <div class="hotel-icon">🏨</div>
+                    <div class="hotel-details">
+                        <div class="hotel-name"><a href="https://www.marriott.com/reservation/rateListMenu.mi" target="_blank">TownePlace Suites by Marriott El Paso Northwest</a></div>
+                        <div class="hotel-address">6381 Berringer Street, El Paso, Texas 79932 USA</div>
+                    </div>
                 </div>
             </div>
 
             <div class="day-card">
-                <div class="day-title">Day 7 (4.4): 外星人小镇 <span class="drive-time">🚗 4.5h</span></div>
-                <div class="highlights">外星人小镇，巨石堆回程待定。</div>
+                <div class="day-title">Day 7 (4.3): El Paso 出发 ➔ Carlsbad ➔ Roswell ➔ Abilene <span class="drive-time">🚗 7h</span></div>
+                <div class="highlights">从 El Paso 出发，经 Carlsbad 洞穴，再去 Roswell 外星人小镇，继续前往 Abilene 住宿。</div>
                 <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Roswell+UFO" target="_blank" class="spot-tag">外星人小镇</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Carlsbad+Caverns" target="_blank" class="spot-tag">Carlsbad 洞穴</a>
+                    <a href="https://www.xiaohongshu.com/search_result?keyword=Roswell+UFO+外星人" target="_blank" class="spot-tag">Roswell 外星人小镇</a>
+                    <a href="https://www.abilenevisitors.com/things-to-do/attractions/?utm_source=chatgpt.com" target="_blank" class="spot-tag">Abilene 西部小镇</a>
+                </div>
+                <div class="hotel-info">
+                    <div class="hotel-icon">🏨</div>
+                    <div class="hotel-details">
+                        <div class="hotel-name"><a href="https://www.marriott.com/reservation/rateListMenu.mi" target="_blank">Courtyard by Marriott Abilene Southwest/Abilene Mall South</a></div>
+                        <div class="hotel-address">4350 Ridgemont Drive, Abilene, Texas 79606 USA</div>
+                    </div>
                 </div>
             </div>
 
             <div class="day-card">
-                <div class="day-title">Day 8 (4.5): 归途 <span class="drive-time">🚗 6.5h</span></div>
-                <div class="highlights">罗斯威尔 ➔ 穿越德州 ➔ 返回达拉斯。</div>
+                <div class="day-title">Day 8 (4.4): Abilene ➔ 达拉斯 Southlake <span class="drive-time">🚗 3h</span></div>
+                <div class="highlights">Abilene ➔ 返回达拉斯 Southlake 区域，轻松返程，准备次日离境或继续探索达拉斯都会区。</div>
+                <div class="hotel-info">
+                    <div class="hotel-icon">🏨</div>
+                    <div class="hotel-details">
+                        <div class="hotel-name"><a href="https://www.marriott.com/reservation/rateListMenu.mi" target="_blank">Delta Hotels Dallas Southlake</a></div>
+                        <div class="hotel-address">251 East State Hwy 114, Southlake, Texas 76092 USA</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -141,9 +174,11 @@
             { name: "Valley of Dreams", lat: 36.1466, lon: -107.9808 },
             { name: "Albuquerque", lat: 35.0844, lon: -106.6504 },
             { name: "White Sands", lat: 32.7872, lon: -106.3257 },
+            { name: "El Paso", lat: 31.7619, lon: -106.4850 },
             { name: "Carlsbad", lat: 32.1755, lon: -104.4440 },
             { name: "Roswell", lat: 33.3943, lon: -104.5230 },
-            { name: "Dallas", lat: 32.7767, lon: -96.7970 }
+            { name: "Abilene", lat: 32.4487, lon: -99.7331 },
+            { name: "Southlake", lat: 32.9412, lon: -97.1342 }
         ];
 
         var latlngs = locations.map(l => [l.lat, l.lon]);
@@ -155,7 +190,11 @@
             "820 Thousand Oaks Drive, Hurst, Texas 76054 United States",
             "724 S Polk St, Amarillo, Texas 79101",
             "721 Mariposa St, Alamosa, Colorado 81101",
-            "21691 US Highway 160 West, Durango, Colorado 81301 USA"
+            "21691 US Highway 160 West, Durango, Colorado 81301 USA",
+            "560 Scott Avenue, Farmington, New Mexico 87401 USA",
+            "6381 Berringer Street, El Paso, Texas 79932 USA",
+            "4350 Ridgemont Drive, Abilene, Texas 79606 USA",
+            "251 East State Hwy 114, Southlake, Texas 76092 USA"
         ];
 
         // Fallback coordinates if geocoding fails
@@ -163,7 +202,11 @@
             null, // Day 1
             null, // Day 2
             null, // Day 3
-            [37.2769, -107.8766] // Day 4 Durango, CO
+            [37.2769, -107.8766], // Day 4 Durango, CO
+            [36.7281, -108.2187], // Day 5 Farmington, NM
+            [31.7619, -106.4850], // Day 6 El Paso, TX
+            [32.4487, -99.7331],  // Day 7 Abilene, TX
+            [32.9412, -97.1342]   // Day 8 Southlake, TX
         ];
 
         // Function to geocode address
