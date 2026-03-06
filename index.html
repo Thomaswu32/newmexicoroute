@@ -512,7 +512,7 @@
             const duration = Math.min(2200, Math.max(600, dist * 280 + 400));
 
             // Rotate car to face direction of travel
-            carAngle = calcBearing(from, to) - 90;
+            carAngle = calcBearing(from, to) + 90;
             const carEl = carMarker.getElement();
             if (carEl) {
                 const emoji = carEl.querySelector('.car-emoji');
