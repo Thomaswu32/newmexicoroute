@@ -6,244 +6,744 @@
     <title>newmexicoroute - 西南大满贯</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --primary-color: #c0392b; --bg-color: #e9ecef; --text-color: #333; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #main-wrapper { width: 90vw; height: 85vh; min-width: 800px; display: flex; background-color: #fff; border-radius: 16px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); overflow: hidden; position: relative; }
+        /* ── Base ── */
+        :root { --primary: #c0392b; --bg: #e9ecef; --text: #333; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg); color: var(--text);
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        /* ── Layout ── */
+        #main-wrapper {
+            width: 90vw; height: 85vh; min-width: 800px;
+            display: flex;
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            overflow: hidden; position: relative;
+        }
         #map-container { width: 50%; height: 100%; border-right: 2px solid #eee; position: relative; z-index: 1; }
         #map { width: 100%; height: 100%; }
-        #itinerary-container { width: 50%; height: 100%; overflow-y: scroll; padding: 30px; box-sizing: border-box; background-color: #faf9f6; position: relative; z-index: 10; -webkit-overflow-scrolling: touch; }
-        h1 { color: var(--primary-color); font-size: 22px; margin: 0 0 10px 0; border-bottom: 3px solid var(--primary-color); padding-bottom: 5px; display: inline-block; }
-        .intro { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
-        .day-card { background: #fff; border-left: 4px solid var(--primary-color); border-radius: 0 8px 8px 0; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .day-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .drive-time { font-size: 11px; color: #fff; background: var(--primary-color); padding: 3px 8px; border-radius: 12px; }
+
+        /* Itinerary panel = flex column */
+        #itinerary-container {
+            width: 50%; height: 100%;
+            display: flex; flex-direction: column;
+            background: #faf9f6;
+            position: relative; z-index: 10;
+        }
+
+        /* ── Edit bar ── */
+        #edit-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 16px;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+        #sync-status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #888; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #27ae60; flex-shrink: 0; }
+        .status-dot.syncing { background: #f39c12; animation: pulse 1s ease-in-out infinite; }
+        .status-dot.error   { background: #e74c3c; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        #edit-controls { display: flex; gap: 8px; }
+        .btn {
+            padding: 7px 15px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: background .18s, opacity .18s;
+        }
+        .btn:disabled { opacity: .55; cursor: not-allowed; }
+        #btn-edit   { background: #ecf0f1; color: #2c3e50; }
+        #btn-edit:hover:not(:disabled)   { background: #d5dbde; }
+        #btn-save   { background: var(--primary); color: #fff; }
+        #btn-save:hover:not(:disabled)   { background: #a93226; }
+        #btn-cancel { background: #ecf0f1; color: #7f8c8d; }
+        #btn-cancel:hover:not(:disabled) { background: #d5dbde; }
+
+        /* ── Scroll area ── */
+        #itinerary-scroll {
+            flex: 1; overflow-y: scroll;
+            padding: 20px 28px 36px;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+        #itinerary-scroll.editing { background: #fffef5; }
+
+        /* ── Loading overlay ── */
+        #loading-overlay {
+            position: absolute; inset: 0;
+            background: rgba(250,249,246,.92);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 12px; z-index: 50;
+        }
+        .spinner {
+            width: 34px; height: 34px;
+            border: 3px solid #ddd; border-top-color: var(--primary);
+            border-radius: 50%; animation: spin .75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 13px; color: #999; }
+
+        /* ── View mode typography ── */
+        h1 { color: var(--primary); font-size: 22px; margin: 0 0 10px; border-bottom: 3px solid var(--primary); padding-bottom: 5px; display: inline-block; }
+        .intro { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.55; }
+        .day-card {
+            background: #fff;
+            border-left: 4px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            padding: 15px; margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+        }
+        .day-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .drive-time { font-size: 11px; color: #fff; background: var(--primary); padding: 3px 8px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
         .highlights { font-size: 13px; line-height: 1.6; color: #555; }
         .spot-tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; }
-        .spot-tag { display: inline-block; background: #ecf0f1; color: #34495e; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; position: relative; z-index: 20; touch-action: manipulation; }
-        .spot-tag:hover { background: var(--primary-color); color: #fff; }
-        .hotel-info { display: flex; align-items: flex-start; gap: 12px; margin-top: 12px; padding: 12px; background: #fff9f7; border-left: 3px solid var(--primary-color); border-radius: 4px; }
-        .hotel-icon { width: 36px; height: 36px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; flex-shrink: 0; }
-        .hotel-details { flex: 1; }
+        .spot-tag {
+            display: inline-block; background: #ecf0f1; color: #34495e;
+            padding: 8px 15px; border-radius: 6px;
+            font-size: 12px; font-weight: 600; text-decoration: none;
+            cursor: pointer; position: relative; z-index: 20; touch-action: manipulation;
+        }
+        .spot-tag:hover { background: var(--primary); color: #fff; }
+        .hotel-info {
+            display: flex; align-items: flex-start; gap: 12px;
+            margin-top: 12px; padding: 12px;
+            background: #fff9f7; border-left: 3px solid var(--primary); border-radius: 4px;
+        }
+        .hotel-icon {
+            width: 36px; height: 36px; background: var(--primary);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; color: #fff; font-size: 18px; flex-shrink: 0;
+        }
+        .hotel-details { flex: 1; min-width: 0; }
         .hotel-name { font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 3px; }
-        .hotel-name a { color: #c0392b; text-decoration: none; cursor: pointer; }
+        .hotel-name a { color: var(--primary); text-decoration: none; }
         .hotel-name a:hover { text-decoration: underline; }
-        .hotel-info { cursor: pointer; }
         .hotel-address { font-size: 11px; color: #7f8c8d; line-height: 1.4; }
+
+        /* ── Edit mode styles ── */
+        .edit-banner {
+            background: #fffbcc; border: 1px solid #e0c000;
+            border-radius: 8px; padding: 9px 14px; margin-bottom: 16px;
+            font-size: 12px; color: #7a6000;
+        }
+        .edit-section { margin-bottom: 14px; }
+        .edit-label {
+            display: block; font-size: 10px; font-weight: 700;
+            color: #aaa; text-transform: uppercase; letter-spacing: .6px;
+            margin-bottom: 4px;
+        }
+        .edit-field {
+            width: 100%;
+            border: 1.5px solid #dcc700;
+            border-radius: 6px; padding: 7px 10px;
+            font-family: inherit; font-size: 13px; color: #333;
+            background: #fff; outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .edit-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(192,57,43,.12);
+        }
+        .edit-textarea { resize: vertical; min-height: 62px; }
+        .day-card.editing { border-left-color: #d4ac00; }
+
+        .edit-row { margin-bottom: 10px; }
+        .day-title-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .day-title-row .main-title { flex: 1; }
+        .day-title-row .drive-col  { width: 135px; flex-shrink: 0; }
+
+        /* Spot editor */
+        .spots-editor { display: flex; flex-direction: column; gap: 7px; }
+        .spot-editor-item {
+            display: flex; gap: 7px; align-items: center;
+            background: #f0f7ff; border: 1px dashed #7aaddf;
+            border-radius: 6px; padding: 8px;
+        }
+        .spot-label-col { width: 120px; flex-shrink: 0; }
+        .spot-url-col   { flex: 1; min-width: 0; }
+        .spot-editor-item .edit-field { margin: 0; }
+        .tag-delete-btn {
+            background: #e74c3c; color: #fff; border: none;
+            border-radius: 50%; width: 24px; height: 24px;
+            cursor: pointer; font-size: 13px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+        }
+        .tag-delete-btn:hover { background: #c0392b; }
+        .add-tag-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #27ae60; color: #fff; border: none;
+            border-radius: 6px; padding: 7px 12px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            align-self: flex-start; margin-top: 3px;
+        }
+        .add-tag-btn:hover { background: #219a52; }
+
+        /* Hotel edit block */
+        .hotel-edit-block {
+            margin-top: 12px; padding: 12px;
+            background: #fff9f7; border-left: 3px solid var(--primary); border-radius: 4px;
+        }
+        .hotel-edit-header { font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+
+        /* ── Toast ── */
+        #toaster {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: #2c3e50; color: #fff;
+            padding: 10px 20px; border-radius: 8px;
+            font-size: 13px; opacity: 0;
+            transition: opacity .25s, transform .25s;
+            pointer-events: none; z-index: 9999;
+        }
+        #toaster.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toaster.success { background: #27ae60; }
+        #toaster.error   { background: #e74c3c; }
     </style>
 </head>
 <body>
     <div id="main-wrapper">
         <div id="map-container"><div id="map"></div></div>
+
         <div id="itinerary-container">
-            <h1>👑 8天 西南大满贯 (newmexicoroute)</h1>
-            <p class="intro">点击标签跳转小红书。Day 2 调整为长途奔袭模式，争取大沙丘日落。</p>
-
-            <div class="day-card">
-                <div class="day-title">Day 1 (3.28): 落地开车半小时 <span class="drive-time">🚗 0.5h</span></div>
-                <div class="highlights">落地开车半小时。</div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.ihg.com/holidayinnexpress/hotels/us/en/hurst/dfwht/hoteldetail" target="_blank">Holiday Inn Express & Suites DFW West - Hurst</a></div>
-                        <div class="hotel-address">820 Thousand Oaks Drive, Hurst, Texas 76054 United States</div>
-                    </div>
+            <!-- Edit bar -->
+            <div id="edit-bar">
+                <div id="sync-status">
+                    <span class="status-dot syncing" id="status-dot"></span>
+                    <span id="status-text">连接中...</span>
+                </div>
+                <div id="edit-controls">
+                    <button class="btn" id="btn-edit">✏️ 编辑</button>
+                    <button class="btn" id="btn-save"   hidden>💾 保存</button>
+                    <button class="btn" id="btn-cancel" hidden>✕ 取消</button>
                 </div>
             </div>
 
-            <div class="day-card">
-                <div class="day-title">Day 2 (3.29): 牛仔小镇到阿马里洛 <span class="drive-time">🚗 4h</span></div>
-                <div class="highlights">牛仔小镇到阿马里洛。</div>
-                <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Fort+Worth+牛仔小镇" target="_blank" class="spot-tag">牛仔小镇</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Cadillac+Ranch" target="_blank" class="spot-tag">凯迪拉克庄园</a>
+            <!-- Scrollable content -->
+            <div id="itinerary-scroll">
+                <div id="loading-overlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在加载数据...</div>
                 </div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/hotels/travel/amacd-courtyard-amarillo-downtown/" target="_blank">Courtyard Amarillo Downtown</a></div>
-                        <div class="hotel-address">724 S Polk St, Amarillo, Texas 79101</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 3 (3.30): 极致穿越 <span class="drive-time">🚗 6.5h</span></div>
-                <div class="highlights">阿马里洛——Santa Fe——Taos。</div>
-                <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Taos+Pueblo+印第安村" target="_blank" class="spot-tag">陶斯印第安村</a>
-                </div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/hotels/travel/alsfi-fairfield-inn-and-suites-alamosa/" target="_blank">Fairfield Inn & Suites Alamosa</a></div>
-                        <div class="hotel-address">721 Mariposa St, Alamosa, Colorado 81101</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 4 (3.31): 沙丘与印第安村 <span class="drive-time">🚗 4h</span></div>
-                <div class="highlights">大沙丘 然后前往mesa verde 住在mesa verde附近。</div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/search/findHotels.mi?fromToDate=03/05/2026&fromToDate_submit=04/02/2026&fromDate=04/01/2026&toDate=04/02/2026&toDateDefaultFormat=04/02/2026&fromDateDefaultFormat=04/01/2026&flexibleDateSearch=false&t-start=04/01/2026&t-end=04/02/2026&lengthOfStay=1&childrenCountBox=0+Children+Per+Room&childrenCount=0&clusterCode=none&useRewardsPoints=false&isAdvanceSearch=true&recordsPerPage=20&isInternalSearch=true&vsInitialRequest=false&searchType=InCity&singleSearchAutoSuggest=Unmatched&destinationAddress.placeId=ChIJI6BnjpsCPIcRodRaP-EDEx4&for-hotels-nearme=Near&collapseAccordian=is-hidden&singleSearch=true&isTransient=true&initialRequest=false&flexibleDateSearchRateDisplay=false&isSearch=true&isRateCalendar=false&destinationAddress.destination=Residence+Inn+by+Marriott+Durango+Downtown&isHideFlexibleDateCalendar=false&roomCountBox=1+Room&roomCount=1&guestCountBox=1+Adult+Per+Room&numAdultsPerRoom=1&deviceType=desktop-web&view=list" target="_blank">Residence Inn by Marriott Durango Downtown</a></div>
-                        <div class="hotel-address">21691 US Highway 160 West, Durango, Colorado 81301 USA</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 5 (4.1): 悬崖与孤峰 <span class="drive-time">🚗 6h</span></div>
-                <div class="highlights">梅萨维德 (Mesa Verde) ➔ 船岩 (Shiprock) ➔ 法明顿，法明顿 ➔ 梦幻谷 (Valley of Dreams)浅玩。</div>
-                <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Mesa+Verde" target="_blank" class="spot-tag">悬崖宫殿</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Shiprock+船岩" target="_blank" class="spot-tag">船岩孤峰</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Valley+of+Dreams+Bisti" target="_blank" class="spot-tag">梦幻谷</a>
-                </div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/hotels/travel/fmncv-courtyard-farmington/" target="_blank">Courtyard by Marriott Farmington</a></div>
-                        <div class="hotel-address">560 Scott Avenue, Farmington, New Mexico 87401 USA</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 6 (4.2): 法明顿 ➔ ABQ ➔ 白沙 ➔ El Paso <span class="drive-time">🚗 6h</span></div>
-                <div class="highlights">从法明顿出发，经阿尔伯克基，游览白沙国家公园，傍晚抵达 El Paso 入住。</div>
-                <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Albuquerque+阿尔伯克基" target="_blank" class="spot-tag">ABQ</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=White+Sands+白沙公园" target="_blank" class="spot-tag">白沙日落</a>
-                </div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/reservation/rateListMenu.mi" target="_blank">TownePlace Suites by Marriott El Paso Northwest</a></div>
-                        <div class="hotel-address">6381 Berringer Street, El Paso, Texas 79932 USA</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 7 (4.3): El Paso 出发 ➔ Carlsbad ➔ Roswell ➔ Abilene <span class="drive-time">🚗 7h</span></div>
-                <div class="highlights">从 El Paso 出发，经 Carlsbad 洞穴，再去 Roswell 外星人小镇，继续前往 Abilene 住宿。</div>
-                <div class="spot-tags">
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Carlsbad+Caverns" target="_blank" class="spot-tag">Carlsbad 洞穴</a>
-                    <a href="https://www.xiaohongshu.com/search_result?keyword=Roswell+UFO+外星人" target="_blank" class="spot-tag">Roswell 外星人小镇</a>
-                    <a href="https://www.abilenevisitors.com/things-to-do/attractions/?utm_source=chatgpt.com" target="_blank" class="spot-tag">Abilene 西部小镇</a>
-                </div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/reservation/rateListMenu.mi" target="_blank">Courtyard by Marriott Abilene Southwest/Abilene Mall South</a></div>
-                        <div class="hotel-address">4350 Ridgemont Drive, Abilene, Texas 79606 USA</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="day-card">
-                <div class="day-title">Day 8 (4.4): Abilene ➔ 达拉斯 Southlake <span class="drive-time">🚗 3h</span></div>
-                <div class="highlights">Abilene ➔ 返回达拉斯 Southlake 区域，轻松返程，准备次日离境或继续探索达拉斯都会区。</div>
-                <div class="hotel-info">
-                    <div class="hotel-icon">🏨</div>
-                    <div class="hotel-details">
-                        <div class="hotel-name"><a href="https://www.marriott.com/reservation/rateListMenu.mi" target="_blank">Delta Hotels Dallas Southlake</a></div>
-                        <div class="hotel-address">251 East State Hwy 114, Southlake, Texas 76092 USA</div>
-                    </div>
-                </div>
+                <div id="itinerary-content"></div>
             </div>
         </div>
     </div>
 
+    <div id="toaster"></div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map', { tap: false }).setView([35.0, -103.0], 5);
+    <script type="module">
+        import { initializeApp }            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        /* ─── Firebase init ─────────────────────────────────────────────────── */
+        const firebaseConfig = {
+            apiKey:            "AIzaSyACdJyUXjs-h0XPEuJYtMg1_txxJjVnqHI",
+            authDomain:        "newmexicoroute.firebaseapp.com",
+            databaseURL:       "https://newmexicoroute-default-rtdb.firebaseio.com",
+            projectId:         "newmexicoroute",
+            storageBucket:     "newmexicoroute.firebasestorage.app",
+            messagingSenderId: "840850472144",
+            appId:             "1:840850472144:web:09481ca530880ac2d6b2d5",
+        };
+        const fbApp   = initializeApp(firebaseConfig);
+        const db      = getDatabase(fbApp);
+        const dataRef = ref(db, 'itinerary');
+
+        /* ─── Default / seed data ───────────────────────────────────────────── */
+        const DEFAULT_DATA = {
+            meta: {
+                title: "👑 8天 西南大满贯 (newmexicoroute)",
+                intro:  "点击标签跳转小红书。Day 2 调整为长途奔袭模式，争取大沙丘日落。"
+            },
+            days: [
+                {
+                    title:      "Day 1 (3.28): 落地开车半小时",
+                    driveTime:  "🚗 0.5h",
+                    highlights: "落地开车半小时。",
+                    spots: [],
+                    hotel: {
+                        name:    "Holiday Inn Express & Suites DFW West - Hurst",
+                        url:     "https://www.ihg.com/holidayinnexpress/hotels/us/en/hurst/dfwht/hoteldetail",
+                        address: "820 Thousand Oaks Drive, Hurst, Texas 76054 United States"
+                    }
+                },
+                {
+                    title:      "Day 2 (3.29): 牛仔小镇到阿马里洛",
+                    driveTime:  "🚗 4h",
+                    highlights: "牛仔小镇到阿马里洛。",
+                    spots: [
+                        { label: "牛仔小镇",     url: "https://www.xiaohongshu.com/search_result?keyword=Fort+Worth+牛仔小镇" },
+                        { label: "凯迪拉克庄园",  url: "https://www.xiaohongshu.com/search_result?keyword=Cadillac+Ranch" }
+                    ],
+                    hotel: {
+                        name:    "Courtyard Amarillo Downtown",
+                        url:     "https://www.marriott.com/hotels/travel/amacd-courtyard-amarillo-downtown/",
+                        address: "724 S Polk St, Amarillo, Texas 79101"
+                    }
+                },
+                {
+                    title:      "Day 3 (3.30): 极致穿越",
+                    driveTime:  "🚗 6.5h",
+                    highlights: "阿马里洛——Santa Fe——Taos。",
+                    spots: [
+                        { label: "陶斯印第安村", url: "https://www.xiaohongshu.com/search_result?keyword=Taos+Pueblo+印第安村" }
+                    ],
+                    hotel: {
+                        name:    "Fairfield Inn & Suites Alamosa",
+                        url:     "https://www.marriott.com/hotels/travel/alsfi-fairfield-inn-and-suites-alamosa/",
+                        address: "721 Mariposa St, Alamosa, Colorado 81101"
+                    }
+                },
+                {
+                    title:      "Day 4 (3.31): 沙丘与印第安村",
+                    driveTime:  "🚗 4h",
+                    highlights: "大沙丘 然后前往mesa verde 住在mesa verde附近。",
+                    spots: [],
+                    hotel: {
+                        name:    "Residence Inn by Marriott Durango Downtown",
+                        url:     "https://www.marriott.com/hotels/travel/drogd-residence-inn-durango-downtown/",
+                        address: "21691 US Highway 160 West, Durango, Colorado 81301 USA"
+                    }
+                },
+                {
+                    title:      "Day 5 (4.1): 悬崖与孤峰",
+                    driveTime:  "🚗 6h",
+                    highlights: "梅萨维德 (Mesa Verde) ➔ 船岩 (Shiprock) ➔ 法明顿，法明顿 ➔ 梦幻谷 (Valley of Dreams)浅玩。",
+                    spots: [
+                        { label: "悬崖宫殿", url: "https://www.xiaohongshu.com/search_result?keyword=Mesa+Verde" },
+                        { label: "船岩孤峰", url: "https://www.xiaohongshu.com/search_result?keyword=Shiprock+船岩" },
+                        { label: "梦幻谷",   url: "https://www.xiaohongshu.com/search_result?keyword=Valley+of+Dreams+Bisti" }
+                    ],
+                    hotel: {
+                        name:    "Courtyard by Marriott Farmington",
+                        url:     "https://www.marriott.com/hotels/travel/fmncv-courtyard-farmington/",
+                        address: "560 Scott Avenue, Farmington, New Mexico 87401 USA"
+                    }
+                },
+                {
+                    title:      "Day 6 (4.2): 法明顿 ➔ ABQ ➔ 白沙 ➔ El Paso",
+                    driveTime:  "🚗 6h",
+                    highlights: "从法明顿出发，经阿尔伯克基，游览白沙国家公园，傍晚抵达 El Paso 入住。",
+                    spots: [
+                        { label: "ABQ",    url: "https://www.xiaohongshu.com/search_result?keyword=Albuquerque+阿尔伯克基" },
+                        { label: "白沙日落", url: "https://www.xiaohongshu.com/search_result?keyword=White+Sands+白沙公园" }
+                    ],
+                    hotel: {
+                        name:    "TownePlace Suites by Marriott El Paso Northwest",
+                        url:     "https://www.marriott.com/hotels/travel/elptn-towneplace-suites-el-paso-northwest/",
+                        address: "6381 Berringer Street, El Paso, Texas 79932 USA"
+                    }
+                },
+                {
+                    title:      "Day 7 (4.3): El Paso 出发 ➔ Carlsbad ➔ Roswell ➔ Abilene",
+                    driveTime:  "🚗 7h",
+                    highlights: "从 El Paso 出发，经 Carlsbad 洞穴，再去 Roswell 外星人小镇，继续前往 Abilene 住宿。",
+                    spots: [
+                        { label: "Carlsbad 洞穴",      url: "https://www.xiaohongshu.com/search_result?keyword=Carlsbad+Caverns" },
+                        { label: "Roswell 外星人小镇",  url: "https://www.xiaohongshu.com/search_result?keyword=Roswell+UFO+外星人" },
+                        { label: "Abilene 西部小镇",    url: "https://www.abilenevisitors.com/things-to-do/attractions/" }
+                    ],
+                    hotel: {
+                        name:    "Courtyard by Marriott Abilene Southwest/Abilene Mall South",
+                        url:     "https://www.marriott.com/hotels/travel/abicy-courtyard-abilene-southwest-abilene-mall-south/",
+                        address: "4350 Ridgemont Drive, Abilene, Texas 79606 USA"
+                    }
+                },
+                {
+                    title:      "Day 8 (4.4): Abilene ➔ 达拉斯 Southlake",
+                    driveTime:  "🚗 3h",
+                    highlights: "Abilene ➔ 返回达拉斯 Southlake 区域，轻松返程，准备次日离境或继续探索达拉斯都会区。",
+                    spots: [],
+                    hotel: {
+                        name:    "Delta Hotels Dallas Southlake",
+                        url:     "https://www.marriott.com/hotels/travel/dfwsl-delta-hotels-dallas-southlake/",
+                        address: "251 East State Hwy 114, Southlake, Texas 76092 USA"
+                    }
+                }
+            ]
+        };
+
+        /* ─── App state ─────────────────────────────────────────────────────── */
+        let currentData        = null;
+        let isEditing          = false;
+        let hotelMarkers       = [];
+        let hotelMarkersReady  = false;
+
+        /* ─── Map ───────────────────────────────────────────────────────────── */
+        const map = L.map('map', { tap: false }).setView([35.0, -103.0], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-        
-        var locations = [
-            { name: "Dallas", lat: 32.7767, lon: -96.7970 },
-            { name: "Fort Worth", lat: 32.7887, lon: -97.3498 },
-            { name: "Amarillo", lat: 35.2220, lon: -101.8313 },
-            { name: "Santa Fe", lat: 35.6870, lon: -105.9378 },
-            { name: "Great Sand Dunes", lat: 37.7329, lon: -105.5121 },
-            { name: "Taos", lat: 36.4072, lon: -105.5730 },
-            { name: "Mesa Verde", lat: 37.2309, lon: -108.4618 },
-            { name: "Shiprock", lat: 36.6859, lon: -108.8364 },
-            { name: "Valley of Dreams", lat: 36.1466, lon: -107.9808 },
-            { name: "Albuquerque", lat: 35.0844, lon: -106.6504 },
-            { name: "White Sands", lat: 32.7872, lon: -106.3257 },
-            { name: "El Paso", lat: 31.7619, lon: -106.4850 },
-            { name: "Carlsbad", lat: 32.1755, lon: -104.4440 },
-            { name: "Roswell", lat: 33.3943, lon: -104.5230 },
-            { name: "Abilene", lat: 32.4487, lon: -99.7331 },
-            { name: "Southlake", lat: 32.9412, lon: -97.1342 }
+
+        const routeLocations = [
+            { name: "Dallas",          lat: 32.7767, lon: -96.7970 },
+            { name: "Fort Worth",      lat: 32.7887, lon: -97.3498 },
+            { name: "Amarillo",        lat: 35.2220, lon: -101.8313 },
+            { name: "Santa Fe",        lat: 35.6870, lon: -105.9378 },
+            { name: "Great Sand Dunes",lat: 37.7329, lon: -105.5121 },
+            { name: "Taos",            lat: 36.4072, lon: -105.5730 },
+            { name: "Mesa Verde",      lat: 37.2309, lon: -108.4618 },
+            { name: "Shiprock",        lat: 36.6859, lon: -108.8364 },
+            { name: "Valley of Dreams",lat: 36.1466, lon: -107.9808 },
+            { name: "Albuquerque",     lat: 35.0844, lon: -106.6504 },
+            { name: "White Sands",     lat: 32.7872, lon: -106.3257 },
+            { name: "El Paso",         lat: 31.7619, lon: -106.4850 },
+            { name: "Carlsbad",        lat: 32.1755, lon: -104.4440 },
+            { name: "Roswell",         lat: 33.3943, lon: -104.5230 },
+            { name: "Abilene",         lat: 32.4487, lon: -99.7331  },
+            { name: "Southlake",       lat: 32.9412, lon: -97.1342  }
+        ];
+        const latlngs = routeLocations.map(l => [l.lat, l.lon]);
+        routeLocations.forEach(l => L.marker([l.lat, l.lon]).addTo(map).bindPopup(l.name));
+        L.polyline(latlngs, { color: '#c0392b', weight: 4, dashArray: '8, 8' }).addTo(map);
+        setTimeout(() => map.fitBounds(latlngs, { padding: [25, 25] }), 300);
+
+        const redIcon = L.icon({
+            iconUrl:     'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+            shadowUrl:   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize:    [25, 41], iconAnchor:   [12, 41],
+            popupAnchor: [1, -34], shadowSize:   [41, 41]
+        });
+
+        // Approximate hotel coordinates (fallback, updated via geocoding in background)
+        const hotelFallbacks = [
+            [32.8534, -97.1888],   // Day 1 Hurst TX
+            [35.2220, -101.8313],  // Day 2 Amarillo TX
+            [37.4697, -105.8700],  // Day 3 Alamosa CO
+            [37.2753, -107.8801],  // Day 4 Durango CO
+            [36.7281, -108.2187],  // Day 5 Farmington NM
+            [31.7619, -106.4850],  // Day 6 El Paso TX
+            [32.4487, -99.7331],   // Day 7 Abilene TX
+            [32.9412, -97.1342]    // Day 8 Southlake TX
         ];
 
-        var latlngs = locations.map(l => [l.lat, l.lon]);
-        locations.forEach(l => L.marker([l.lat, l.lon]).addTo(map).bindPopup(l.name));
-        L.polyline(latlngs, {color: '#c0392b', weight: 4, dashArray: '8, 8'}).addTo(map);
-        
-        // Hotel addresses
-        var hotelAddresses = [
-            "820 Thousand Oaks Drive, Hurst, Texas 76054 United States",
-            "724 S Polk St, Amarillo, Texas 79101",
-            "721 Mariposa St, Alamosa, Colorado 81101",
-            "21691 US Highway 160 West, Durango, Colorado 81301 USA",
-            "560 Scott Avenue, Farmington, New Mexico 87401 USA",
-            "6381 Berringer Street, El Paso, Texas 79932 USA",
-            "4350 Ridgemont Drive, Abilene, Texas 79606 USA",
-            "251 East State Hwy 114, Southlake, Texas 76092 USA"
-        ];
-
-        // Fallback coordinates if geocoding fails
-        var hotelFallbacks = [
-            null, // Day 1
-            null, // Day 2
-            null, // Day 3
-            [37.2769, -107.8766], // Day 4 Durango, CO
-            [36.7281, -108.2187], // Day 5 Farmington, NM
-            [31.7619, -106.4850], // Day 6 El Paso, TX
-            [32.4487, -99.7331],  // Day 7 Abilene, TX
-            [32.9412, -97.1342]   // Day 8 Southlake, TX
-        ];
-
-        // Function to geocode address
         async function geocode(address) {
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
-                const data = await response.json();
-                if (data.length > 0) {
-                    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                }
-            } catch (error) {
-                console.error('Geocoding error:', error);
-            }
+                const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`);
+                const data = await res.json();
+                if (data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            } catch (e) { /* silent */ }
             return null;
         }
 
-        // Add hotel markers
-        hotelAddresses.forEach(async (address, index) => {
-            let coords = await geocode(address);
-            if (!coords && hotelFallbacks[index]) {
-                coords = hotelFallbacks[index];
+        async function addHotelMarkers(days) {
+            hotelMarkers.forEach(m => map.removeLayer(m));
+            hotelMarkers = [];
+
+            // Immediate pass: place markers at fallback coordinates
+            days.forEach((day, i) => {
+                if (!day.hotel || !hotelFallbacks[i]) return;
+                const m = L.marker(hotelFallbacks[i], { icon: redIcon })
+                    .addTo(map)
+                    .bindPopup(`🏨 Day ${i + 1}: ${esc(day.hotel.name || '')}`);
+                hotelMarkers.push(m);
+            });
+
+            // Background pass: refine positions via geocoding
+            for (let i = 0; i < days.length; i++) {
+                const addr = days[i]?.hotel?.address;
+                if (!addr || !hotelMarkers[i]) continue;
+                const coords = await geocode(addr);
+                if (coords) hotelMarkers[i].setLatLng(coords);
+                await sleep(1200); // Nominatim rate limit
             }
-            if (coords) {
-                L.marker(coords, {
-                    icon: L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    })
-                }).addTo(map).bindPopup(`Hotel Day ${index + 1}: ${address}`);
+        }
+
+        /* ─── Helpers ───────────────────────────────────────────────────────── */
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        function esc(str) {
+            return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // Firebase stores empty arrays as null; also may store arrays as objects
+        function toArr(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            return Object.values(val);
+        }
+
+        function setStatus(state, text) {
+            const dot = document.getElementById('status-dot');
+            dot.className = 'status-dot' + (state === 'ok' ? '' : ' ' + state);
+            document.getElementById('status-text').textContent = text;
+        }
+
+        function toast(msg, type = '') {
+            const el = document.getElementById('toaster');
+            el.textContent = msg;
+            el.className = 'show ' + type;
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => { el.className = ''; }, 2800);
+        }
+
+        /* ─── Render: view mode ─────────────────────────────────────────────── */
+        function renderView(data) {
+            document.getElementById('itinerary-scroll').classList.remove('editing');
+            document.getElementById('btn-edit').hidden   = false;
+            document.getElementById('btn-save').hidden   = true;
+            document.getElementById('btn-cancel').hidden = true;
+
+            const meta = data.meta || {};
+            const days = toArr(data.days);
+
+            let html = `<h1>${esc(meta.title)}</h1><p class="intro">${esc(meta.intro)}</p>`;
+
+            days.forEach((day, i) => {
+                const spots = toArr(day.spots);
+                html += `<div class="day-card">`;
+                html += `<div class="day-title">${esc(day.title)}<span class="drive-time">${esc(day.driveTime)}</span></div>`;
+                html += `<div class="highlights">${esc(day.highlights)}</div>`;
+
+                if (spots.length) {
+                    html += `<div class="spot-tags">`;
+                    spots.forEach(s => {
+                        html += `<a href="${esc(s.url)}" target="_blank" class="spot-tag">${esc(s.label)}</a>`;
+                    });
+                    html += `</div>`;
+                }
+
+                if (day.hotel) {
+                    html += `
+                    <div class="hotel-info">
+                        <div class="hotel-icon">🏨</div>
+                        <div class="hotel-details">
+                            <div class="hotel-name"><a href="${esc(day.hotel.url)}" target="_blank">${esc(day.hotel.name)}</a></div>
+                            <div class="hotel-address">${esc(day.hotel.address)}</div>
+                        </div>
+                    </div>`;
+                }
+                html += `</div>`;
+            });
+
+            document.getElementById('itinerary-content').innerHTML = html;
+        }
+
+        /* ─── Render: edit mode ─────────────────────────────────────────────── */
+        function renderEdit(data) {
+            document.getElementById('itinerary-scroll').classList.add('editing');
+            document.getElementById('btn-edit').hidden   = true;
+            document.getElementById('btn-save').hidden   = false;
+            document.getElementById('btn-cancel').hidden = false;
+
+            const meta = data.meta || {};
+            const days = toArr(data.days);
+
+            let html = `
+            <div class="edit-banner">
+                ✏️ <strong>编辑模式已开启</strong> — 修改完成后点击「保存」，所有人将看到最新版本。
+            </div>
+            <div class="edit-section">
+                <label class="edit-label">页面标题</label>
+                <input class="edit-field" id="meta-title" value="${esc(meta.title)}">
+            </div>
+            <div class="edit-section">
+                <label class="edit-label">页面简介</label>
+                <textarea class="edit-field edit-textarea" id="meta-intro">${esc(meta.intro)}</textarea>
+            </div>`;
+
+            days.forEach((day, i) => {
+                const spots = toArr(day.spots);
+                html += `<div class="day-card editing" data-day="${i}">`;
+
+                // Title + drive time on one row
+                html += `
+                <div class="day-title-row">
+                    <div class="main-title">
+                        <label class="edit-label">Day 标题</label>
+                        <input class="edit-field day-title-input" value="${esc(day.title)}">
+                    </div>
+                    <div class="drive-col">
+                        <label class="edit-label">驾车时间</label>
+                        <input class="edit-field drive-time-input" value="${esc(day.driveTime)}">
+                    </div>
+                </div>`;
+
+                // Highlights
+                html += `
+                <div class="edit-row">
+                    <label class="edit-label">行程描述</label>
+                    <textarea class="edit-field edit-textarea highlights-input">${esc(day.highlights)}</textarea>
+                </div>`;
+
+                // Spot tags
+                html += `
+                <div class="edit-row">
+                    <label class="edit-label">景点标签</label>
+                    <div class="spots-editor" id="spots-${i}">`;
+                spots.forEach(s => {
+                    html += spotEditorItem(s.label, s.url);
+                });
+                html += `
+                        <button class="add-tag-btn" onclick="addSpot('spots-${i}')">+ 添加景点</button>
+                    </div>
+                </div>`;
+
+                // Hotel
+                html += `
+                <div class="hotel-edit-block">
+                    <div class="hotel-edit-header">🏨 住宿信息</div>
+                    <div class="edit-row">
+                        <label class="edit-label">酒店名称</label>
+                        <input class="edit-field hotel-name-input" value="${esc(day.hotel?.name || '')}">
+                    </div>
+                    <div class="edit-row">
+                        <label class="edit-label">酒店网址</label>
+                        <input class="edit-field hotel-url-input" value="${esc(day.hotel?.url || '')}">
+                    </div>
+                    <div class="edit-row" style="margin-bottom:0">
+                        <label class="edit-label">酒店地址</label>
+                        <input class="edit-field hotel-address-input" value="${esc(day.hotel?.address || '')}">
+                    </div>
+                </div>`;
+
+                html += `</div>`; // end .day-card
+            });
+
+            document.getElementById('itinerary-content').innerHTML = html;
+        }
+
+        function spotEditorItem(label, url) {
+            return `
+            <div class="spot-editor-item">
+                <input class="edit-field spot-label-input spot-label-col" placeholder="景点名称" value="${esc(label)}">
+                <input class="edit-field spot-url-input  spot-url-col"   placeholder="链接 URL" value="${esc(url)}">
+                <button class="tag-delete-btn" title="删除景点" onclick="this.closest('.spot-editor-item').remove()">✕</button>
+            </div>`;
+        }
+
+        /* ─── Global helpers called from inline onclick ─────────────────────── */
+        window.addSpot = function(containerId) {
+            const container = document.getElementById(containerId);
+            const addBtn    = container.querySelector('.add-tag-btn');
+            const div       = document.createElement('div');
+            div.innerHTML   = spotEditorItem('', '');
+            const item      = div.firstElementChild;
+            container.insertBefore(item, addBtn);
+            item.querySelector('.spot-label-input').focus();
+        };
+
+        /* ─── Collect form data ──────────────────────────────────────────────── */
+        function collectData() {
+            const days = [];
+            document.querySelectorAll('.day-card.editing').forEach(card => {
+                const spots = [];
+                card.querySelectorAll('.spot-editor-item').forEach(item => {
+                    const label = item.querySelector('.spot-label-input').value.trim();
+                    const url   = item.querySelector('.spot-url-input').value.trim();
+                    if (label) spots.push({ label, url });
+                });
+                days.push({
+                    title:      card.querySelector('.day-title-input').value.trim(),
+                    driveTime:  card.querySelector('.drive-time-input').value.trim(),
+                    highlights: card.querySelector('.highlights-input').value.trim(),
+                    spots,
+                    hotel: {
+                        name:    card.querySelector('.hotel-name-input').value.trim(),
+                        url:     card.querySelector('.hotel-url-input').value.trim(),
+                        address: card.querySelector('.hotel-address-input').value.trim()
+                    }
+                });
+            });
+            return {
+                meta: {
+                    title: document.getElementById('meta-title').value.trim(),
+                    intro: document.getElementById('meta-intro').value.trim()
+                },
+                days
+            };
+        }
+
+        /* ─── Button handlers ───────────────────────────────────────────────── */
+        document.getElementById('btn-edit').addEventListener('click', () => {
+            isEditing = true;
+            renderEdit(currentData);
+        });
+
+        document.getElementById('btn-cancel').addEventListener('click', () => {
+            isEditing = false;
+            renderView(currentData);
+        });
+
+        document.getElementById('btn-save').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true;
+            btn.textContent = '⏳ 保存中...';
+            setStatus('syncing', '同步中...');
+            try {
+                const newData = collectData();
+                await set(dataRef, newData);
+                currentData = newData;
+                isEditing = false;
+                renderView(currentData);
+                // Refresh hotel markers after save
+                hotelMarkersReady = false;
+                addHotelMarkers(toArr(currentData.days));
+                hotelMarkersReady = true;
+                toast('保存成功！所有人将看到最新内容。', 'success');
+                setStatus('ok', '已同步');
+            } catch (err) {
+                console.error('Save error:', err);
+                toast('保存失败，请检查网络或数据库权限。', 'error');
+                setStatus('error', '同步失败');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💾 保存';
             }
         });
-        
-        setTimeout(() => { map.fitBounds(latlngs, {padding: [25, 25]}); }, 300);
+
+        /* ─── Firebase real-time listener ───────────────────────────────────── */
+        setStatus('syncing', '连接中...');
+
+        onValue(dataRef, (snapshot) => {
+            document.getElementById('loading-overlay').style.display = 'none';
+
+            if (snapshot.exists()) {
+                const remoteData = snapshot.val();
+                if (!isEditing) {
+                    currentData = remoteData;
+                    renderView(currentData);
+                    if (!hotelMarkersReady) {
+                        addHotelMarkers(toArr(currentData.days));
+                        hotelMarkersReady = true;
+                    }
+                }
+                setStatus('ok', '已同步');
+            } else {
+                // First run: seed Firebase with default data
+                set(dataRef, DEFAULT_DATA).then(() => {
+                    currentData = DEFAULT_DATA;
+                    renderView(currentData);
+                    addHotelMarkers(toArr(currentData.days));
+                    hotelMarkersReady = true;
+                    setStatus('ok', '已同步');
+                    toast('已初始化默认数据。', 'success');
+                }).catch(err => {
+                    console.error('Seed error:', err);
+                    // Still show default data locally
+                    currentData = DEFAULT_DATA;
+                    renderView(currentData);
+                    setStatus('error', '初始化失败');
+                    toast('数据库写入失败，请检查 Firebase 规则。', 'error');
+                });
+            }
+        }, (error) => {
+            console.error('Firebase onValue error:', error);
+            document.getElementById('loading-overlay').style.display = 'none';
+            setStatus('error', '连接失败');
+            if (!currentData) {
+                currentData = DEFAULT_DATA;
+                renderView(currentData);
+                toast('无法连接数据库，显示本地默认数据。', 'error');
+            }
+        });
     </script>
 </body>
 </html>
