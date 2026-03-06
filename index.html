@@ -103,6 +103,18 @@
         .day-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .drive-time { font-size: 11px; color: #fff; background: var(--primary); padding: 3px 8px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
         .highlights { font-size: 13px; line-height: 1.6; color: #555; }
+        .highlight-block { font-size: 13px; line-height: 1.6; color: #555; margin-bottom: 4px; }
+        .highlight-block:last-child { margin-bottom: 0; }
+
+        /* Highlights editor */
+        .highlights-editor { display: flex; flex-direction: column; gap: 6px; }
+        .highlight-item {
+            display: flex; gap: 7px; align-items: flex-start;
+        }
+        .highlight-item textarea {
+            flex: 1; resize: vertical; min-height: 52px;
+        }
+        .highlight-item .tag-delete-btn { margin-top: 2px; flex-shrink: 0; }
         .spot-tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; }
         .spot-tag {
             display: inline-block; background: #ecf0f1; color: #34495e;
@@ -268,7 +280,7 @@
                 {
                     title:      "Day 1 (3.28): 落地开车半小时",
                     driveTime:  "🚗 0.5h",
-                    highlights: "落地开车半小时。",
+                    highlights: ["落地开车半小时。"],
                     spots: [],
                     hotel: {
                         name:    "Holiday Inn Express & Suites DFW West - Hurst",
@@ -279,7 +291,7 @@
                 {
                     title:      "Day 2 (3.29): 牛仔小镇到阿马里洛",
                     driveTime:  "🚗 4h",
-                    highlights: "牛仔小镇到阿马里洛。",
+                    highlights: ["牛仔小镇到阿马里洛。"],
                     spots: [
                         { label: "牛仔小镇",     url: "https://www.xiaohongshu.com/search_result?keyword=Fort+Worth+牛仔小镇" },
                         { label: "凯迪拉克庄园",  url: "https://www.xiaohongshu.com/search_result?keyword=Cadillac+Ranch" }
@@ -293,7 +305,7 @@
                 {
                     title:      "Day 3 (3.30): 极致穿越",
                     driveTime:  "🚗 6.5h",
-                    highlights: "阿马里洛——Santa Fe——Taos。",
+                    highlights: ["阿马里洛——Santa Fe——Taos。"],
                     spots: [
                         { label: "陶斯印第安村", url: "https://www.xiaohongshu.com/search_result?keyword=Taos+Pueblo+印第安村" }
                     ],
@@ -306,7 +318,7 @@
                 {
                     title:      "Day 4 (3.31): 沙丘与印第安村",
                     driveTime:  "🚗 4h",
-                    highlights: "大沙丘 然后前往mesa verde 住在mesa verde附近。",
+                    highlights: ["大沙丘 然后前往mesa verde 住在mesa verde附近。"],
                     spots: [],
                     hotel: {
                         name:    "Residence Inn by Marriott Durango Downtown",
@@ -317,7 +329,7 @@
                 {
                     title:      "Day 5 (4.1): 悬崖与孤峰",
                     driveTime:  "🚗 6h",
-                    highlights: "梅萨维德 (Mesa Verde) ➔ 船岩 (Shiprock) ➔ 法明顿，法明顿 ➔ 梦幻谷 (Valley of Dreams)浅玩。",
+                    highlights: ["梅萨维德 (Mesa Verde) ➔ 船岩 (Shiprock) ➔ 法明顿，法明顿 ➔ 梦幻谷 (Valley of Dreams)浅玩。"],
                     spots: [
                         { label: "悬崖宫殿", url: "https://www.xiaohongshu.com/search_result?keyword=Mesa+Verde" },
                         { label: "船岩孤峰", url: "https://www.xiaohongshu.com/search_result?keyword=Shiprock+船岩" },
@@ -332,7 +344,7 @@
                 {
                     title:      "Day 6 (4.2): 法明顿 ➔ ABQ ➔ 白沙 ➔ El Paso",
                     driveTime:  "🚗 6h",
-                    highlights: "从法明顿出发，经阿尔伯克基，游览白沙国家公园，傍晚抵达 El Paso 入住。",
+                    highlights: ["从法明顿出发，经阿尔伯克基，游览白沙国家公园，傍晚抵达 El Paso 入住。"],
                     spots: [
                         { label: "ABQ",    url: "https://www.xiaohongshu.com/search_result?keyword=Albuquerque+阿尔伯克基" },
                         { label: "白沙日落", url: "https://www.xiaohongshu.com/search_result?keyword=White+Sands+白沙公园" }
@@ -346,7 +358,7 @@
                 {
                     title:      "Day 7 (4.3): El Paso 出发 ➔ Carlsbad ➔ Roswell ➔ Abilene",
                     driveTime:  "🚗 7h",
-                    highlights: "从 El Paso 出发，经 Carlsbad 洞穴，再去 Roswell 外星人小镇，继续前往 Abilene 住宿。",
+                    highlights: ["从 El Paso 出发，经 Carlsbad 洞穴，再去 Roswell 外星人小镇，继续前往 Abilene 住宿。"],
                     spots: [
                         { label: "Carlsbad 洞穴",      url: "https://www.xiaohongshu.com/search_result?keyword=Carlsbad+Caverns" },
                         { label: "Roswell 外星人小镇",  url: "https://www.xiaohongshu.com/search_result?keyword=Roswell+UFO+外星人" },
@@ -361,7 +373,7 @@
                 {
                     title:      "Day 8 (4.4): Abilene ➔ 达拉斯 Southlake",
                     driveTime:  "🚗 3h",
-                    highlights: "Abilene ➔ 返回达拉斯 Southlake 区域，轻松返程，准备次日离境或继续探索达拉斯都会区。",
+                    highlights: ["Abilene ➔ 返回达拉斯 Southlake 区域，轻松返程，准备次日离境或继续探索达拉斯都会区。"],
                     spots: [],
                     hotel: {
                         name:    "Delta Hotels Dallas Southlake",
@@ -470,6 +482,13 @@
             return Object.values(val);
         }
 
+        // highlights can be a legacy string or an array of strings
+        function toHighlights(val) {
+            if (!val) return [''];
+            if (typeof val === 'string') return [val];
+            return toArr(val).filter(s => s !== undefined);
+        }
+
         function setStatus(state, text) {
             const dot = document.getElementById('status-dot');
             dot.className = 'status-dot' + (state === 'ok' ? '' : ' ' + state);
@@ -500,7 +519,9 @@
                 const spots = toArr(day.spots);
                 html += `<div class="day-card">`;
                 html += `<div class="day-title">${esc(day.title)}<span class="drive-time">${esc(day.driveTime)}</span></div>`;
-                html += `<div class="highlights">${esc(day.highlights)}</div>`;
+                toHighlights(day.highlights).forEach(h => {
+                    if (h) html += `<div class="highlight-block">${esc(h)}</div>`;
+                });
 
                 if (spots.length) {
                     html += `<div class="spot-tags">`;
@@ -570,7 +591,13 @@
                 html += `
                 <div class="edit-row">
                     <label class="edit-label">行程描述</label>
-                    <textarea class="edit-field edit-textarea highlights-input">${esc(day.highlights)}</textarea>
+                    <div class="highlights-editor" id="hl-${i}">`;
+                toHighlights(day.highlights).forEach(h => {
+                    html += highlightItem(h);
+                });
+                html += `
+                        <button class="add-tag-btn" onclick="addHighlight('hl-${i}')">+ 添加描述</button>
+                    </div>
                 </div>`;
 
                 // Spot tags
@@ -610,6 +637,14 @@
             document.getElementById('itinerary-content').innerHTML = html;
         }
 
+        function highlightItem(text) {
+            return `
+            <div class="highlight-item">
+                <textarea class="edit-field edit-textarea highlight-text-input">${esc(text)}</textarea>
+                <button class="tag-delete-btn" title="删除此段描述" onclick="this.closest('.highlight-item').remove()">✕</button>
+            </div>`;
+        }
+
         function spotEditorItem(label, url) {
             return `
             <div class="spot-editor-item">
@@ -620,6 +655,16 @@
         }
 
         /* ─── Global helpers called from inline onclick ─────────────────────── */
+        window.addHighlight = function(containerId) {
+            const container = document.getElementById(containerId);
+            const addBtn    = container.querySelector('.add-tag-btn');
+            const div       = document.createElement('div');
+            div.innerHTML   = highlightItem('');
+            const item      = div.firstElementChild;
+            container.insertBefore(item, addBtn);
+            item.querySelector('textarea').focus();
+        };
+
         window.addSpot = function(containerId) {
             const container = document.getElementById(containerId);
             const addBtn    = container.querySelector('.add-tag-btn');
@@ -640,10 +685,15 @@
                     const url   = item.querySelector('.spot-url-input').value.trim();
                     if (label) spots.push({ label, url });
                 });
+                const highlights = [];
+                card.querySelectorAll('.highlight-text-input').forEach(ta => {
+                    const v = ta.value.trim();
+                    if (v) highlights.push(v);
+                });
                 days.push({
                     title:      card.querySelector('.day-title-input').value.trim(),
                     driveTime:  card.querySelector('.drive-time-input').value.trim(),
-                    highlights: card.querySelector('.highlights-input').value.trim(),
+                    highlights,
                     spots,
                     hotel: {
                         name:    card.querySelector('.hotel-name-input').value.trim(),
